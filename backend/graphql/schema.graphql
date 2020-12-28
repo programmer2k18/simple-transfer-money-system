@@ -1,0 +1,71 @@
+"A date string with format `Y-m-d`, e.g. `2011-05-23`."
+scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
+
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+type Query {
+
+    loggedInUser: User @auth(guard: "api") @middleware(checks: ["auth:api"])
+
+    getCurrentBalance: Float @field(resolver: "BalanceQuery@__invoke") @middleware(checks: ["auth:api"])
+
+    transactions: [Transaction!]! @field(resolver: "TransactionQuery@__invoke") @middleware(checks: ["auth:api"])
+
+    user(id: ID @eq): User @find
+
+}
+
+type Mutation {
+
+  login(
+
+     email: String! @rules(apply: ["required"])
+     password: String! @rules(apply: ["required", "min:8"])
+
+  ): Credentials @field(resolver: "LoginMutator@__invoke")
+
+  logout: String! @field(resolver: "LogoutMutator@__invoke") @middleware(checks: ["auth:api"])
+
+  signup(
+
+     name: String! @rules(apply: ["required"])
+     email: String! @rules(apply: ["email","required" ,"unique:users"])
+     password: String! @rules(apply: ["required", "min:8", "confirmed:password_confirmation"])
+     password_confirmation: String! @rules(apply: ["required", "min:8"])
+
+  ): Credentials @field(resolver: "SignUpMutator@__invoke")
+
+  transferMoney(
+
+     to: Int! @rules(apply: ["required", "numeric"])
+     amount: Float! @rules(apply: ["required","numeric"])
+
+  ): Transaction @field(resolver: "TransferMoneyMutator@__invoke") @middleware(checks: ["auth:api"])
+
+}
+
+type Credentials{
+    user: User!
+    token: String!
+}
+
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    balance: Float!
+    transactions: [Transaction!]! @hasMany
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Transaction{
+    id: ID!
+    from: Int!
+    to: Int!
+    amount: Float!
+    user: User! @belongsTo(relation: "user")
+    created_at: DateTime!
+    updated_at: DateTime!
+}
