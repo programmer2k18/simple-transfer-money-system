@@ -1,5 +1,5 @@
 
-# Api Using PHP/Lravel, Graphql and Mysql.
+# Api Using PHP/Laravel, Graphql and Mysql.
 
 # Requirments
 - Composer
